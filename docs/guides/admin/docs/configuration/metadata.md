@@ -1,18 +1,18 @@
 Overview
 ========================
 
-In Opencast, metadata is stored in so-called metadata catalogs. For each event or series, an arbiraty number of
-such configurable metadata catalog can be managed. A common set of metadata has been standarized to form a
-common basis (standard metadata), whereas administrators can configure Opencast to support other metadata sets
+In Opencast, metadata is stored in so-called metadata catalogs. For each event or series, an arbitrary number of
+such configurable metadata catalog can be managed. A standardized set of metadata forms a
+common basis (standard metadata). Administrators can configure Opencast to support additional metadata sets
 (extended metadata).
 
 This document provides an overview over Opencast's metadata capabilities and its configuration.
 
 ## Standard Metadata
 
-For both events and series, a common set of metadata is supported by Opencast out-of-the box. Since metadata catalogs
-are referenced from within media package, flavors can be used to identify a specific metadata catalog. The following
-flavors are treated by Opencast as standard metadata in means of Opencast expects them to be present:
+For both events and series, a standardized set of metadata is supported by a fresh installation of Opencast. Because 
+metadata catalogs are referenced from within media packages, flavors can be used to identify a specific metadata catalog. 
+The following flavors are treated by Opencast as standard metadata, therefore Opencast expects them to exist:
 
 * `dublincore/episode` holds the standard metadata of an event
 * `dublincore/series` holds the standard metadata of a series
@@ -146,15 +146,15 @@ tagging operation for dublincore metadata the following way
 
 ## Configuring the events publisher metadata field
 
-The metadata field can be used in two ways, and its meaning varies slightly:
+The metadata field can be used in two slightly differing ways:
 
 * The publisher is the creator of the event: when an event is created, this field is filled automatically with the
 logged in user. It cannot be modified on creation of the event nor later.
-* The publisher is responsible for uploading the content but may not be the creator of the event in the UI:
+* The publisher is responsible for uploading the content but might not be the creator of the event in the UI:
 in this case, when the event is created, the publisher is selected from a list provider that includes the logged in user
 (selected by default) and it is also modifiable later, but then the logged in user is not selectable.
 
-The configuration is done in the file: `etc/org.opencastproject.ui.metadata.CatalogUIAdapterFactory-episode-common.cfg`.
+The configuration for this is here: `etc/org.opencastproject.ui.metadata.CatalogUIAdapterFactory-episode-common.cfg`.
 
 First option is the default one and the configuration is as follows:
 
