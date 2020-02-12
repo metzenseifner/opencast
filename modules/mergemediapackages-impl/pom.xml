@@ -60,32 +60,35 @@
     <dependency>
       <groupId>org.opencastproject</groupId>
       <artifactId>opencast-index-service</artifactId>
-      <version>9-SNAPSHOT</version>
+      <version>8-SNAPSHOT</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.opencastproject</groupId>
       <artifactId>opencast-admin-ui-index</artifactId>
-      <version>9-SNAPSHOT</version>
+      <version>8-SNAPSHOT</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
-      <groupId>org.opencastproject</groupId>
-      <artifactId>opencast-index-service</artifactId>
-      <version>9-SNAPSHOT</version>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.opencastproject</groupId>
-      <artifactId>opencast-search-api</artifactId>
-      <version>9-SNAPSHOT</version>
-      <scope>compile</scope>
+      <groupId>com.google.code.gson</groupId>
+      <artifactId>gson</artifactId>
     </dependency>
     <dependency>
       <groupId>org.opencastproject</groupId>
       <artifactId>opencast-search-api</artifactId>
-      <version>9-SNAPSHOT</version>
-      <scope>compile</scope>
+      <version>8-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>joda-time</groupId>
+      <artifactId>joda-time</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
     </dependency>
   </dependencies>
   <build>
@@ -119,7 +122,8 @@
             </Export-Package>
             <Service-Component>
               OSGI-INF/mergemediapackages.xml,
-              OSGI-INF/mergemediapackages-rest.xml
+              OSGI-INF/mergemediapackages-rest.xml,
+              OSGI-INF/cronjob.xml
             </Service-Component>
           </instructions>
         </configuration>

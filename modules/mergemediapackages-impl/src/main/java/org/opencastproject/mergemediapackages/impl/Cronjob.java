@@ -23,65 +23,60 @@ package org.opencastproject.mergemediapackages.impl;
 
 import org.opencastproject.adminui.index.AdminUISearchIndex;
 import org.opencastproject.assetmanager.api.AssetManager;
-import org.opencastproject.index.service.api.EventIndex;
-import org.opencastproject.index.service.api.IndexService;
-import org.opencastproject.index.service.impl.IndexServiceImpl;
 import org.opencastproject.index.service.impl.index.event.Event;
 import org.opencastproject.index.service.impl.index.event.EventSearchQuery;
-import org.opencastproject.index.service.util.RestUtils;
-import org.opencastproject.ingest.api.IngestException;
-import org.opencastproject.ingest.api.IngestService;
 import org.opencastproject.matterhorn.search.SearchIndexException;
 import org.opencastproject.matterhorn.search.SearchResult;
 import org.opencastproject.matterhorn.search.SearchResultItem;
+import org.opencastproject.mediapackage.Catalog;
 import org.opencastproject.mediapackage.MediaPackage;
-import org.opencastproject.mediapackage.MediaPackageException;
+import org.opencastproject.mediapackage.MediaPackageElementFlavor;
+import org.opencastproject.mergemediapackages.api.MergeMediapackagesService;
 import org.opencastproject.security.api.SecurityService;
-import org.opencastproject.util.DateTimeSupport;
-import org.opencastproject.util.data.Tuple;
-import org.opencastproject.workflow.api.WorkflowInstance;
-import com.entwinemedia.fn.data.Opt;
 
+import com.entwinemedia.fn.data.Opt;
+import com.google.common.reflect.TypeToken;
+import com.google.gson.Gson;
+
+import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Dictionary;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.stream.Collectors;
+
 
 public class Cronjob implements  ManagedService {
 
-  private AssetManager assetmanger;
-  private IngestService ingestService;
+  private static final long fONCE_PER_DAY = 1000 * 60 * 60 * 24;
+  private static final int fONE_DAY = 1;
+  private static final int fFOUR_AM = 4;
+  private static final int fZERO_MINUTES = 0;
+
+  private static final Logger logger = LoggerFactory.getLogger(Cronjob.class);
+
+  private AssetManager assetManager;
   private AdminUISearchIndex adminUISearchIndex;
   private SecurityService securityService;
 
   public void setAssetManager(AssetManager assetManager) {
-    this.assetmanger = assetManager;
+    this.assetManager = assetManager;
   }
 
-  public void setEventIndex(AdminUISearchIndex adminUISearchIndex) { this.adminUISearchIndex = adminUISearchIndex; }
+  public void setAdminUISearchIndex(AdminUISearchIndex adminUISearchIndex) { this.adminUISearchIndex = adminUISearchIndex; }
 
   void setSecurityService(SecurityService securityService) { this.securityService = securityService; }
-
-  private final static long fONCE_PER_DAY = 1000 * 60 * 60 * 24;
-
-  private final static int fONE_DAY = 1;
-  private final static int fFOUR_AM = 4;
-  private final static int fZERO_MINUTES = 0;
-
-
-
 
   @Override
   public void updated(Dictionary<String, ?> dictionary) throws ConfigurationException {
@@ -103,19 +98,51 @@ public class Cronjob implements  ManagedService {
   }
 
   private void startmerge() {
-  List<String> mediaPackageIds = getEventsfrom(2);
+    List<String> mediaPackageIds = getEventsfromLastDays(2);
+    Map<String, ArrayList<String>> idsAndRelation = new HashMap<String, ArrayList<String>>();
 
-  for (String mediaPackageId: mediaPackageIds) {
+    for (String mediaPackageId : mediaPackageIds) {
+      String relation = "";
 
-    Opt<MediaPackage> mediaPackage = assetmanger.getMediaPackage(mediaPackageId);
-    mediaPackage.get().getCatalogs("")
+      Opt<MediaPackage> mediaPackage = assetManager.getMediaPackage(mediaPackageId);
+
+      Catalog[] catalog = mediaPackage.get()
+              .getCatalogs(MediaPackageElementFlavor.parseFlavor("technical/extron-smp-351"));
+
+      for (Catalog smpCatalog : catalog) {
+        try {
+
+          String targetFileStr = IOUtils.toString((smpCatalog.getURI()), "UTF-8")
+                  .replaceAll("\\r\\n|\\r|\\n|\\t}", " ");
+
+          Map<String, Object> mapObj = new Gson().fromJson(targetFileStr, new TypeToken<HashMap<String, Object>>() {
+          }.getType());
+          Map<String, Object> packageObj = (Map<String, Object>) mapObj.get("package");
+          Map<String, Object> metadataObj = (Map<String, Object>) packageObj.get("metadata");
+          relation = (String) metadataObj.get("dc:relation");
+          if (!idsAndRelation.get(relation).isEmpty()) {
+            ArrayList mediapackageList = idsAndRelation.get(relation);
+            mediapackageList.add(mediaPackageId);
+            idsAndRelation.put(relation, mediapackageList);
+          } else {
+            ArrayList<String> mediaPackageList = new ArrayList<String>();
+            mediaPackageList.add(mediaPackageId);
+            idsAndRelation.put(relation, mediaPackageList);
+          }
+
+        } catch (Exception e) {
+          logger.error("Could not read Json File from SMP %s", e);
+        }
+
+      }
+
+      MergeMediapackagesService mergeMediapackagesService = new MergeMediapackagesServiceImpl();
+      idsAndRelation.forEach((k, v) -> mergeMediapackagesService.mergemediapackages(v, "smp-process"));
+    }
 
   }
 
-
-  }
-
-  private List<String> getEventsfrom(Integer days) {
+  private List<String> getEventsfromLastDays(Integer days) {
     EventSearchQuery query;
     SearchResult<Event> result = null;
     List<String> mediaPackageIds = new ArrayList();
@@ -144,9 +171,8 @@ public class Cronjob implements  ManagedService {
   private static Date getTomorrowMorning4am() {
     Calendar tomorrow = new GregorianCalendar();
     tomorrow.add(Calendar.DATE, fONE_DAY);
-    Calendar result = new GregorianCalendar(tomorrow.get(Calendar.YEAR),
-            tomorrow.get(Calendar.MONTH), tomorrow.get(Calendar.DATE), fFOUR_AM,
-            fZERO_MINUTES);
+    Calendar result = new GregorianCalendar(tomorrow.get(Calendar.YEAR), tomorrow.get(Calendar.MONTH),
+            tomorrow.get(Calendar.DATE), fFOUR_AM, fZERO_MINUTES);
     return result.getTime();
   }
 
