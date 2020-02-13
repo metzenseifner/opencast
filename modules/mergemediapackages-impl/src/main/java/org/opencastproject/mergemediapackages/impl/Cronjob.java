@@ -78,6 +78,7 @@ public class Cronjob implements  ManagedService {
 
   void setSecurityService(SecurityService securityService) { this.securityService = securityService; }
 
+
   @Override
   public void updated(Dictionary<String, ?> dictionary) throws ConfigurationException {
 
@@ -86,6 +87,7 @@ public class Cronjob implements  ManagedService {
   }
 
   private void startCronJob() {
+    logger.info("Initialising Cronjob");
     // perform the task once a day at 4 a.m., starting tomorrow morning
     Timer timer = new Timer();
     TimerTask repeatedTask = new TimerTask() {
@@ -98,6 +100,7 @@ public class Cronjob implements  ManagedService {
   }
 
   private void startmerge() {
+    logger.info("Search for mediapackages to merge.");
     List<String> mediaPackageIds = getEventsfromLastDays(2);
     Map<String, ArrayList<String>> idsAndRelation = new HashMap<String, ArrayList<String>>();
 
@@ -135,7 +138,8 @@ public class Cronjob implements  ManagedService {
         }
 
       }
-
+      logger.info("start merging mediapackages.");
+      logger.debug("merging: %s.", idsAndRelation.toString());
       MergeMediapackagesService mergeMediapackagesService = new MergeMediapackagesServiceImpl();
       idsAndRelation.forEach((k, v) -> mergeMediapackagesService.mergemediapackages(v, "smp-process"));
     }
@@ -143,6 +147,7 @@ public class Cronjob implements  ManagedService {
   }
 
   private List<String> getEventsfromLastDays(Integer days) {
+    logger.debug("Getting Events from the last %s days", days.toString());
     EventSearchQuery query;
     SearchResult<Event> result = null;
     List<String> mediaPackageIds = new ArrayList();
@@ -164,7 +169,7 @@ public class Cronjob implements  ManagedService {
       Event event = r.getSource();
       mediaPackageIds.add(event.getIdentifier());
     }
-
+    logger.debug("Mediapackages from the last %s days: %s", days.toString(), mediaPackageIds.toString());
     return mediaPackageIds;
   }
 
