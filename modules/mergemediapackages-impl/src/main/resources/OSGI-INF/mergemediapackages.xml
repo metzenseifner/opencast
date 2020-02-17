@@ -13,5 +13,8 @@
              bind="setAssetManager"/>
   <reference name="ingestService" interface="org.opencastproject.ingest.api.IngestService"
              bind="setIngestService"/>
+  <reference name="mergeMediapackageService" interface="org.opencastproject.mergemediapackages.api.MergeMediapackagesService"
+             bind="setMergeMediapackagesService"/>
+
 
 </scr:component>

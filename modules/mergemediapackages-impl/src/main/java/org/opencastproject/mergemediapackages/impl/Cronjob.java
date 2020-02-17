@@ -32,12 +32,19 @@ import org.opencastproject.mediapackage.Catalog;
 import org.opencastproject.mediapackage.MediaPackage;
 import org.opencastproject.mediapackage.MediaPackageElementFlavor;
 import org.opencastproject.mergemediapackages.api.MergeMediapackagesService;
+import org.opencastproject.security.api.DefaultOrganization;
+import org.opencastproject.security.api.Organization;
 import org.opencastproject.security.api.SecurityService;
+import org.opencastproject.security.api.User;
+import org.opencastproject.security.util.SecurityUtil;
+import org.opencastproject.workflow.api.WorkflowInstance;
+import org.opencastproject.workspace.api.Workspace;
 
 import com.entwinemedia.fn.data.Opt;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.osgi.service.cm.ConfigurationException;
@@ -45,6 +52,9 @@ import org.osgi.service.cm.ManagedService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -59,47 +69,83 @@ import java.util.TimerTask;
 
 public class Cronjob implements  ManagedService {
 
-  private static final long fONCE_PER_DAY = 1000 * 60 * 60 * 24;
-  private static final int fONE_DAY = 1;
-  private static final int fFOUR_AM = 4;
-  private static final int fZERO_MINUTES = 0;
+  private static final long ONCE_PER_DAY = 1000 * 60 * 60 * 24;
+  private static final int ONE_DAY = 1;
+  private static final int FOUR_AM = 4;
+  private static final int ZERO_MINUTES = 0;
 
   private static final Logger logger = LoggerFactory.getLogger(Cronjob.class);
+
+  private Timer timer;
+  private TimerTask repeatedTask;
 
   private AssetManager assetManager;
   private AdminUISearchIndex adminUISearchIndex;
   private SecurityService securityService;
+  private MergeMediapackagesService mergeMediapackagesService;
+  private WorkflowInstance workflowInstance;
+  private Workspace workspace;
 
   public void setAssetManager(AssetManager assetManager) {
     this.assetManager = assetManager;
   }
 
-  public void setAdminUISearchIndex(AdminUISearchIndex adminUISearchIndex) { this.adminUISearchIndex = adminUISearchIndex; }
+  public void setAdminUISearchIndex(AdminUISearchIndex adminUISearchIndex) {
+    this.adminUISearchIndex = adminUISearchIndex;
+  }
 
-  void setSecurityService(SecurityService securityService) { this.securityService = securityService; }
+  void setSecurityService(SecurityService securityService) {
+    this.securityService = securityService;
+  }
 
+  void setMergeMediapackagesService(MergeMediapackagesService mergeMediapackagesService) {
+    this.mergeMediapackagesService = mergeMediapackagesService;
+  }
+
+  public void setWorkspace(Workspace workspace) {
+    this.workspace = workspace;
+  }
+
+  /**
+   * deactivate timer
+   */
+  public void deactivate() {
+    repeatedTask.cancel();
+    timer.cancel();
+  }
+
+  /**
+   * Activation callback to be executed once all dependencies are set
+   */
+  public void activate() {
+    logger.info("activate()");
+    timer = new Timer();
+    repeatedTask = new TimerTask() {
+      @Override
+      public void run() {
+        try {
+          startmerge();
+        } catch (IOException e) {
+          e.printStackTrace();
+        }
+      }
+    };
+    startCronJob();
+
+  }
 
   @Override
   public void updated(Dictionary<String, ?> dictionary) throws ConfigurationException {
-
-    startCronJob();
-
   }
 
   private void startCronJob() {
     logger.info("Initialising Cronjob");
     // perform the task once a day at 4 a.m., starting tomorrow morning
-    Timer timer = new Timer();
-    TimerTask repeatedTask = new TimerTask() {
-      @Override
-      public void run() {
-        startmerge();
-      }
-    };
-    timer.scheduleAtFixedRate(repeatedTask, getTomorrowMorning4am(), fONCE_PER_DAY);
+    //timer.scheduleAtFixedRate(repeatedTask, getTomorrowMorning4am(), ONCE_PER_DAY);
+    timer.scheduleAtFixedRate(repeatedTask, DateTime.now().toDate(),60000);
   }
 
-  private void startmerge() {
+  private void startmerge() throws IOException {
     logger.info("Search for mediapackages to merge.");
     List<String> mediaPackageIds = getEventsfromLastDays(2);
     Map<String, ArrayList<String>> idsAndRelation = new HashMap<String, ArrayList<String>>();
@@ -123,27 +169,67 @@ public class Cronjob implements  ManagedService {
           Map<String, Object> packageObj = (Map<String, Object>) mapObj.get("package");
           Map<String, Object> metadataObj = (Map<String, Object>) packageObj.get("metadata");
           relation = (String) metadataObj.get("dc:relation");
-          if (!idsAndRelation.get(relation).isEmpty()) {
-            ArrayList mediapackageList = idsAndRelation.get(relation);
-            mediapackageList.add(mediaPackageId);
-            idsAndRelation.put(relation, mediapackageList);
-          } else {
-            ArrayList<String> mediaPackageList = new ArrayList<String>();
-            mediaPackageList.add(mediaPackageId);
-            idsAndRelation.put(relation, mediaPackageList);
-          }
+          String merged = (String) metadataObj.get("dc:merged");
+          if (!"true".equals(merged)) {
+            logger.info("Mediapackage {} not merged, adding for processing", mediaPackageId);
+            if (!idsAndRelation.get(relation).isEmpty()) {
+              ArrayList mediapackageList = idsAndRelation.get(relation);
+              mediapackageList.add(mediaPackageId);
+              idsAndRelation.put(relation, mediapackageList);
+            } else {
+              ArrayList<String> mediaPackageList = new ArrayList<String>();
+              mediaPackageList.add(mediaPackageId);
+              idsAndRelation.put(relation, mediaPackageList);
+            }
 
+          }
         } catch (Exception e) {
           logger.error("Could not read Json File from SMP %s", e);
         }
 
       }
       logger.info("start merging mediapackages.");
+
       logger.debug("merging: %s.", idsAndRelation.toString());
-      MergeMediapackagesService mergeMediapackagesService = new MergeMediapackagesServiceImpl();
-      idsAndRelation.forEach((k, v) -> mergeMediapackagesService.mergemediapackages(v, "smp-process"));
+
+        for (List<String> idList : idsAndRelation.values()) {
+          workflowInstance = mergeMediapackagesService.mergemediapackages(idList, "smp-process");
+
+          if (workflowInstance.isActive()) {
+            for (String id : idList) {
+              markMedipackageAsMerged(id);
+            }
+          }
+        //idsAndRelation.forEach((k, v) -> mergeMediapackagesService.mergemediapackages(v, "smp-process"));
+
+      }
     }
 
+  }
+
+  private void markMedipackageAsMerged(String id) throws IOException {
+
+    Opt<MediaPackage> assetMediaPackage = assetManager.getMediaPackage(id);
+    Catalog[] assetcatalog = assetMediaPackage.get()
+            .getCatalogs(MediaPackageElementFlavor.parseFlavor("technical/extron-smp-351"));
+
+    String targetFileStr = IOUtils.toString((assetcatalog[0].getURI()), "UTF-8").replaceAll("\\r\\n|\\r|\\n|\\t}", " ");
+
+    Map<String, Object> mapObj = new Gson().fromJson(targetFileStr, new TypeToken<HashMap<String, Object>>() {
+    }.getType());
+    Map<String, Object> packageObj = (Map<String, Object>) mapObj.get("package");
+    Map<String, Object> metadataObj = (Map<String, Object>) packageObj.get("metadata");
+    metadataObj.put("dc:merged", "true");
+
+    InputStream jsonStream = new ByteArrayInputStream(new Gson().toJson(mapObj).getBytes());
+
+    //file as changed set checksum for assetmanager!
+    assetcatalog[0].setChecksum(null);
+    //write new Json File
+    assetcatalog[0].setURI(workspace
+            .put(id, assetcatalog[0].getIdentifier(), FilenameUtils.getName(assetcatalog[0].getURI().getPath()),
+                    jsonStream));
+    assetManager.takeSnapshot(assetMediaPackage.get());
   }
 
   private List<String> getEventsfromLastDays(Integer days) {
@@ -151,9 +237,13 @@ public class Cronjob implements  ManagedService {
     EventSearchQuery query;
     SearchResult<Event> result = null;
     List<String> mediaPackageIds = new ArrayList();
+    Organization organization = new DefaultOrganization();
+    User user = SecurityUtil.createSystemUser("admin", organization);
+    query = new EventSearchQuery(organization.getId(), user);
 
-    query = new EventSearchQuery(securityService.getOrganization().getId(), securityService.getUser());
     try {
+      logger.debug("Getting Events from the last %s days", days.toString());
+
       query.withStartFrom(DateTime.now().minusDays(days).toDate());
       query.withStartTo(DateTime.now().toDate());
     } catch (Exception e) {
@@ -175,9 +265,9 @@ public class Cronjob implements  ManagedService {
 
   private static Date getTomorrowMorning4am() {
     Calendar tomorrow = new GregorianCalendar();
-    tomorrow.add(Calendar.DATE, fONE_DAY);
+    tomorrow.add(Calendar.DATE, ONE_DAY);
     Calendar result = new GregorianCalendar(tomorrow.get(Calendar.YEAR), tomorrow.get(Calendar.MONTH),
-            tomorrow.get(Calendar.DATE), fFOUR_AM, fZERO_MINUTES);
+            tomorrow.get(Calendar.DATE), FOUR_AM, ZERO_MINUTES);
     return result.getTime();
   }
 
