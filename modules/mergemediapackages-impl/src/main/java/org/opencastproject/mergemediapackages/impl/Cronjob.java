@@ -47,9 +47,10 @@ import com.google.gson.Gson;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 import org.osgi.service.cm.ConfigurationException;
-import org.osgi.service.cm.ManagedService;
+import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,11 +69,11 @@ import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class Cronjob implements  ManagedService {
+public class Cronjob {
 
   private static final long ONCE_PER_DAY = 1000 * 60 * 60 * 24;
   private static final int ONE_DAY = 1;
-  private static final int FOUR_AM = 4;
+  private static final int ONE_AM = 1;
   private static final int ZERO_MINUTES = 0;
 
   private static final Logger logger = LoggerFactory.getLogger(Cronjob.class);
@@ -86,6 +87,16 @@ public class Cronjob implements  ManagedService {
   private MergeMediapackagesService mergeMediapackagesService;
   private WorkflowInstance workflowInstance;
   private Workspace workspace;
+
+
+  /** Configuration key for setting a custom search period */
+  private static final String SEARCH_PERIOD_CONFIG = "search.period";
+
+  /** Default search Period in from now - days */
+  public static final String SEARCH_PERIOD_DEFAULT = "2";
+
+  /** search Period */
+  private Integer searchPeriod = Integer.parseInt(SEARCH_PERIOD_DEFAULT);
 
   public void setAssetManager(AssetManager assetManager) {
     this.assetManager = assetManager;
@@ -118,9 +129,12 @@ public class Cronjob implements  ManagedService {
   /**
    * Activation callback to be executed once all dependencies are set
    */
-  public void activate() {
-    logger.info("activate()");
+  public void activate(ComponentContext cc) throws ConfigurationException {
+    logger.debug("activate Cronjob MergeMediapackages");
+    updatedConfiguration(cc.getProperties());
+
     timer = new Timer();
+
     repeatedTask = new TimerTask() {
       @Override
       public void run() {
@@ -135,16 +149,26 @@ public class Cronjob implements  ManagedService {
 
   }
 
-  @Override
-  public void updated(Dictionary<String, ?> dictionary) throws ConfigurationException {
+  public void updatedConfiguration(Dictionary properties) throws ConfigurationException {
+    if (properties == null) {
+     logger.info("No configuration found");
+      return;
+    }
+    logger.debug("Start updating Cronjob");
+
+    searchPeriod = Integer
+            .parseInt(StringUtils.defaultIfBlank((String) properties.get(SEARCH_PERIOD_CONFIG), SEARCH_PERIOD_DEFAULT));
+    logger.info("Set search for Time  -{} days", searchPeriod.toString());
+
+    logger.debug("Finished updating Cronjob");
   }
 
   private void startCronJob() {
-    logger.info("Initialising Cronjob");
+    logger.info("Initialising Cronjob at {}", getTomorrowMorning1am().toString());
     // perform the task once a day at 4 a.m., starting tomorrow morning
-    timer.scheduleAtFixedRate(repeatedTask, getTomorrowMorning4am(), ONCE_PER_DAY);
+    //timer.scheduleAtFixedRate(repeatedTask, getTomorrowMorning1am(), ONCE_PER_DAY);
     //Testing Timer
-    //timer.scheduleAtFixedRate(repeatedTask, DateTime.now().toDate(),60000);
+    timer.scheduleAtFixedRate(repeatedTask, DateTime.now().toDate(),60000);
   }
 
   private void startmerge() throws IOException {
@@ -152,7 +176,7 @@ public class Cronjob implements  ManagedService {
     securityService.setOrganization(new DefaultOrganization());
     User user = SecurityUtil.createSystemUser("admin", securityService.getOrganization());
     securityService.setUser(user);
-    List<String> mediaPackageIds = getEventsfromLastDays(2);
+    List<String> mediaPackageIds = getEventsfromLastDays(searchPeriod);
     Map<String, ArrayList<String>> idsAndRelation = new HashMap<String, ArrayList<String>>();
 
     for (String mediaPackageId : mediaPackageIds) {
@@ -279,11 +303,11 @@ public class Cronjob implements  ManagedService {
     return mediaPackageIds;
   }
 
-  private static Date getTomorrowMorning4am() {
+  private static Date getTomorrowMorning1am() {
     Calendar tomorrow = new GregorianCalendar();
     tomorrow.add(Calendar.DATE, ONE_DAY);
     Calendar result = new GregorianCalendar(tomorrow.get(Calendar.YEAR), tomorrow.get(Calendar.MONTH),
-            tomorrow.get(Calendar.DATE), FOUR_AM, ZERO_MINUTES);
+            tomorrow.get(Calendar.DATE), ONE_AM, ZERO_MINUTES);
     return result.getTime();
   }
 
