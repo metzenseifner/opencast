@@ -24,6 +24,7 @@ package org.opencastproject.mergemediapackages.impl;
 import org.opencastproject.assetmanager.api.AssetManager;
 import org.opencastproject.ingest.api.IngestException;
 import org.opencastproject.ingest.api.IngestService;
+import org.opencastproject.kernel.mail.SmtpService;
 import org.opencastproject.mediapackage.MediaPackage;
 import org.opencastproject.mediapackage.MediaPackageElement;
 import org.opencastproject.mediapackage.MediaPackageException;
@@ -40,10 +41,16 @@ import java.util.Dictionary;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import javax.mail.MessagingException;
+
 public class MergeMediapackagesServiceImpl implements MergeMediapackagesService, ManagedService {
 
   private AssetManager assetmanger;
   private IngestService ingestService;
+  /** The SMTP service */
+  private SmtpService smptService;
+
+  private  String mailto = "Anna.Saxer@uibk.ac.at";
 
   public void setAssetManager(AssetManager assetManager) {
     this.assetmanger = assetManager;
@@ -51,6 +58,11 @@ public class MergeMediapackagesServiceImpl implements MergeMediapackagesService,
 
   public void setIngestService(IngestService ingestService) {
     this.ingestService = ingestService;
+  }
+
+  /**OSGi callback to add {@link SmtpService} instance. */
+  void setSmtpService(SmtpService smtpService) {
+    this.smptService = smtpService;
   }
 
   @Override
@@ -80,13 +92,21 @@ public class MergeMediapackagesServiceImpl implements MergeMediapackagesService,
     return null;
   }
 
-  private MediaPackage mergeMediapackageList(MediaPackage finalMediapackage, List<MediaPackage> mediaPackageList) {
+  private MediaPackage mergeMediapackageList(MediaPackage finalMediapackage, List<MediaPackage> mediaPackageList)
+          throws MediaPackageException, MessagingException {
     for (MediaPackage mediaPackage : mediaPackageList) {
       for (MediaPackageElement mediaPackageElement : mediaPackage.getElements()) {
         if (mediaPackageElement.getFlavor() != null) {
           if (finalMediapackage.getElementsByFlavor(mediaPackageElement.getFlavor()).length == 0) {
             finalMediapackage.add(mediaPackageElement);
+          } else {
+            String content = String.format("Mediapackages {} haben gleiche flavors.", mediaPackageList.toString());
+            String subject = String.format("Mediapackage mit 2 gleichen flavors.");
+            smptService.send(this.mailto,subject,content);
+            throw new MediaPackageException("Mediapackage contains same flavor more than once");
+
           }
+
         }
       }
 
