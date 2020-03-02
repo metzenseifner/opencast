@@ -41,6 +41,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.Dictionary;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.mail.MessagingException;
@@ -107,13 +108,12 @@ public class MergeMediapackagesServiceImpl implements MergeMediapackagesService,
         if (mediaPackageElement.getFlavor() != null) {
           if (finalMediapackage.getElementsByFlavor(mediaPackageElement.getFlavor()).length == 0) {
             finalMediapackage.add(mediaPackageElement);
-          } else if (finalMediapackage.getElementsByFlavor(mediaPackageElement.getFlavor()).length > 0) {
+          } else if (finalMediapackage.getTracks(mediaPackageElement.getFlavor()).length > 0) {
             String content = String.format("Mediapackages {} haben gleiche flavors.", mediaPackageList.toString());
             String subject = String.format("Mediapackage mit 2 gleichen flavors.");
             logger.info("Mediapackage flavors are not uniqe, sending mail {}", mediaPackageList.toString());
             smptService.send(this.mailto,subject,content);
             throw new MediaPackageException("Mediapackage contains same flavor more than once");
-
           }
 
         }
