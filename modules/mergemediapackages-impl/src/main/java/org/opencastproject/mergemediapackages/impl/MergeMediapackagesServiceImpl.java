@@ -35,6 +35,8 @@ import com.entwinemedia.fn.data.Opt;
 
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Dictionary;
@@ -49,6 +51,8 @@ public class MergeMediapackagesServiceImpl implements MergeMediapackagesService,
   private IngestService ingestService;
   /** The SMTP service */
   private SmtpService smptService;
+
+  private static final Logger logger = LoggerFactory.getLogger(Cronjob.class);
 
   private  String mailto = "Anna.Saxer@uibk.ac.at";
 
@@ -81,12 +85,16 @@ public class MergeMediapackagesServiceImpl implements MergeMediapackagesService,
       return workflowInstance;
     } catch (MediaPackageException e) {
       e.printStackTrace();
+      logger.error("Mediapackage Excecption {}",e.getMessage());
     } catch (IOException e) {
       e.printStackTrace();
+      logger.error("IO-Exception {}", e.getMessage());
     } catch (IngestException e) {
+      logger.error("Create Mediapackage in IngestService failed {}",e.getMessage());
       e.printStackTrace();
     } catch (Exception e) {
       e.printStackTrace();
+      logger.error(e.getMessage());
     }
 
     return null;
@@ -99,9 +107,10 @@ public class MergeMediapackagesServiceImpl implements MergeMediapackagesService,
         if (mediaPackageElement.getFlavor() != null) {
           if (finalMediapackage.getElementsByFlavor(mediaPackageElement.getFlavor()).length == 0) {
             finalMediapackage.add(mediaPackageElement);
-          } else {
+          } else if (finalMediapackage.getElementsByFlavor(mediaPackageElement.getFlavor()).length > 0) {
             String content = String.format("Mediapackages {} haben gleiche flavors.", mediaPackageList.toString());
             String subject = String.format("Mediapackage mit 2 gleichen flavors.");
+            logger.info("Mediapackage flavors are not uniqe, sending mail {}", mediaPackageList.toString());
             smptService.send(this.mailto,subject,content);
             throw new MediaPackageException("Mediapackage contains same flavor more than once");
 
