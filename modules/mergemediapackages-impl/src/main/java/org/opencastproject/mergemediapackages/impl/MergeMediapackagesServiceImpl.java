@@ -54,7 +54,7 @@ public class MergeMediapackagesServiceImpl implements MergeMediapackagesService,
 
   private static final Logger logger = LoggerFactory.getLogger(Cronjob.class);
 
-  private  String mailto = "Anna.Saxer@uibk.ac.at";
+  private String mailto = "Anna.Saxer@uibk.ac.at";
 
   public void setAssetManager(AssetManager assetManager) {
     this.assetmanger = assetManager;
@@ -85,13 +85,14 @@ public class MergeMediapackagesServiceImpl implements MergeMediapackagesService,
       return workflowInstance;
     } catch (MediaPackageException e) {
       e.printStackTrace();
-      logger.error("Mediapackage Excecption {}",e.getMessage());
+      logger.error("Mediapackage Excecption {}", e.getMessage());
     } catch (IOException e) {
       e.printStackTrace();
       logger.error("IO-Exception {}", e.getMessage());
     } catch (IngestException e) {
-      logger.error("Create Mediapackage in IngestService failed {}",e.getMessage());
+      logger.error("Create Mediapackage in IngestService failed {}", e.getMessage());
       e.printStackTrace();
+
     } catch (Exception e) {
       e.printStackTrace();
       logger.error(e.getMessage());

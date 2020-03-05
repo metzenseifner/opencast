@@ -166,9 +166,9 @@ public class Cronjob {
   private void startCronJob() {
     logger.info("Initialising Cronjob at {}", getTomorrowMorning1am().toString());
     // perform the task once a day at 1 a.m., starting tomorrow morning
-    timer.scheduleAtFixedRate(repeatedTask, getTomorrowMorning1am(), ONCE_PER_DAY);
+    //timer.scheduleAtFixedRate(repeatedTask, getTomorrowMorning1am(), ONCE_PER_DAY);
     //Testing Timer
-    //timer.scheduleAtFixedRate(repeatedTask, DateTime.now().toDate(),60000);
+    timer.scheduleAtFixedRate(repeatedTask, DateTime.now().toDate(),60000);
   }
 
   private void startmerge() throws IOException {
@@ -225,14 +225,22 @@ public class Cronjob {
       if (mpIdsList.size() > 1) {
         logger.info("start merging mediapackages:- {} - with relation: {}.", mpIdsList.toString(), entry.getKey());
         SecurityUtil.runAs(securityService, securityService.getOrganization(), securityService.getUser(), () -> {
-          workflowInstance = mergeMediapackagesService.mergemediapackages(mpIdsList, "smp-process");
-        });
-        if (workflowInstance.isActive()) {
-          for (String id : mpIdsList) {
-            markMedipackageAsMerged(id);
+          try {
+            workflowInstance = mergeMediapackagesService.mergemediapackages(mpIdsList, "smp-process");
           }
+          catch (Exception e) {
+            logger.error("Fail: ", e.getMessage());
+          }
+        });
+        if (workflowInstance != null) {
+          if (workflowInstance.isActive()) {
+            for (String id : mpIdsList) {
+              markMedipackageAsMerged(id);
+            }
+          }
+        } else {
+          logger.error("Merge Wokflow could not be started.");
         }
-
       } else {
         logger.info("Only One mediapackage found for merging skipping: id: {} , releation: {}", mpIdsList.toString(), entry.getKey());
       }

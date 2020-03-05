@@ -13,4 +13,6 @@
              bind="setAssetManager"/>
   <reference name="ingestService" interface="org.opencastproject.ingest.api.IngestService"
              bind="setIngestService"/>
+  <reference name="smtpService" interface="org.opencastproject.kernel.mail.SmtpService"
+             bind="setSmtpService"/>
 </scr:component>
