@@ -166,9 +166,9 @@ public class Cronjob {
   private void startCronJob() {
     logger.info("Initialising Cronjob at {}", getTomorrowMorning1am().toString());
     // perform the task once a day at 1 a.m., starting tomorrow morning
-    //timer.scheduleAtFixedRate(repeatedTask, getTomorrowMorning1am(), ONCE_PER_DAY);
+    timer.scheduleAtFixedRate(repeatedTask, getTomorrowMorning1am(), ONCE_PER_DAY);
     //Testing Timer
-    timer.scheduleAtFixedRate(repeatedTask, DateTime.now().toDate(),60000);
+    //timer.scheduleAtFixedRate(repeatedTask, DateTime.now().toDate(),60000);
   }
 
   private void startmerge() throws IOException {
