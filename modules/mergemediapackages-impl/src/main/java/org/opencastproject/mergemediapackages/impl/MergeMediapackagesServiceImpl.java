@@ -54,7 +54,7 @@ public class MergeMediapackagesServiceImpl implements MergeMediapackagesService,
 
   private static final Logger logger = LoggerFactory.getLogger(Cronjob.class);
 
-  private String mailto = "Anna.Saxer@uibk.ac.at";
+  private String mailto = "av-studio@uibk.ac.at";
 
   public void setAssetManager(AssetManager assetManager) {
     this.assetmanger = assetManager;
@@ -109,8 +109,8 @@ public class MergeMediapackagesServiceImpl implements MergeMediapackagesService,
           if (finalMediapackage.getElementsByFlavor(mediaPackageElement.getFlavor()).length == 0) {
             finalMediapackage.add(mediaPackageElement);
           } else if (finalMediapackage.getTracks(mediaPackageElement.getFlavor()).length > 0) {
-            String content = String.format("Mediapackages {} haben gleiche flavors.", mediaPackageList.toString());
-            String subject = String.format("Mediapackage mit 2 gleichen flavors.");
+            String content = String.format("Mediapackages %s haben gleiche flavors.", mediaPackageList.toString());
+            String subject = "Mediapackage mit 2 gleichen flavors.";
             logger.info("Mediapackage flavors are not uniqe, sending mail {}", mediaPackageList.toString());
             smptService.send(this.mailto, subject, content);
             throw new MediaPackageException("Mediapackage contains same flavor more than once");
