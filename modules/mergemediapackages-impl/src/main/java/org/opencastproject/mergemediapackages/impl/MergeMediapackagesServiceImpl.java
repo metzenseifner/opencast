@@ -81,7 +81,7 @@ public class MergeMediapackagesServiceImpl implements MergeMediapackagesService,
     try {
       MediaPackage newMediapackage = ingestService.createMediaPackage();
       newMediapackage = mergeMediapackageList(newMediapackage, mediaPackageList);
-      workflowInstance = ingestService.ingest(newMediapackage, workflowId);
+      workflowInstance = ingestService.ingest(newMediapackage, workflowId, null);
       return workflowInstance;
     } catch (MediaPackageException e) {
       e.printStackTrace();

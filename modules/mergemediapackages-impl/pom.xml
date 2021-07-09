@@ -53,8 +53,8 @@
       <artifactId>slf4j-api</artifactId>
     </dependency>
     <dependency>
-      <groupId>javax.ws.rs</groupId>
-      <artifactId>jsr311-api</artifactId>
+      <groupId>jakarta.ws.rs</groupId>
+      <artifactId>jakarta.ws.rs-api</artifactId>
     </dependency>
     <dependency>
       <groupId>org.opencastproject</groupId>
@@ -72,7 +72,7 @@
     </dependency>
     <dependency>
       <groupId>org.opencastproject</groupId>
-      <artifactId>opencast-search-api</artifactId>
+      <artifactId>opencast-elasticsearch-api</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
