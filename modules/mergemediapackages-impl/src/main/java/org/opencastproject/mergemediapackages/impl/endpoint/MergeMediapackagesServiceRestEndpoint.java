@@ -50,8 +50,10 @@ import javax.ws.rs.core.Response;
  * A service endpoint to expose the {@link MergeMediapackagesService} via REST.
  */
 @Path("/")
-@RestService(name = "mergemediapackages", title = "mergemediapackages Service", abstractText = "Merge a List of Mediapackages to one and start a Workflow on the new one.", notes = {
-        "No Notes" })
+@RestService(name = "mergemediapackages",
+    title = "mergemediapackages Service",
+    abstractText = "Merge a List of Mediapackages to one and start a Workflow on the new one.",
+    notes = {"No Notes"})
 public class MergeMediapackagesServiceRestEndpoint {
 
   /**
@@ -73,11 +75,14 @@ public class MergeMediapackagesServiceRestEndpoint {
   @POST
   @Path("/")
   @Produces(MediaType.TEXT_XML)
-  @RestQuery(name = "merge", description = "Merges a List of existing Mediapackages an starts a Workflow on the new created Mediapackage.", returnDescription = "The WorkflowInstance.",
+  @RestQuery(name = "merge",
+          description = "Merges a List of existing Mediapackages an starts a Workflow on the new created Mediapackage.",
+          returnDescription = "The WorkflowInstance.",
           restParameters = {
           @RestParameter(name = "mediapackageIds", isRequired = true, description = "The Mediapackages to Merge."
                   + " The Id or multiple Ids as a comma seperated List ( IdOne,IdTwo )", type = STRING),
-          @RestParameter(name = "workflowId", isRequired = true, description = "The workflowId(e.g. import)", type = STRING) }, responses = {
+          @RestParameter(name = "workflowId", isRequired = true, description = "The workflowId(e.g. import)",
+          type = STRING) }, responses = {
           @RestResponse(responseCode = SC_OK, description = "The WorkflowInstance") })
   public Response mergemediapackages(@FormParam("mediapackageIds") String mediaPackageIds,
           @FormParam("workflowId") String workflowId) {

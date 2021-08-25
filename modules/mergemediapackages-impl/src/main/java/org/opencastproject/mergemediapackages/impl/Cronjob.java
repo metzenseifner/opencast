@@ -26,6 +26,7 @@ import org.opencastproject.assetmanager.api.AssetManager;
 import org.opencastproject.elasticsearch.api.SearchIndexException;
 import org.opencastproject.elasticsearch.api.SearchResult;
 import org.opencastproject.elasticsearch.api.SearchResultItem;
+import org.opencastproject.elasticsearch.index.AbstractSearchIndex;
 import org.opencastproject.elasticsearch.index.event.Event;
 import org.opencastproject.elasticsearch.index.event.EventSearchQuery;
 import org.opencastproject.mediapackage.Catalog;
@@ -82,7 +83,7 @@ public class Cronjob {
   private TimerTask repeatedTask;
 
   private AssetManager assetManager;
-  private AdminUISearchIndex adminUISearchIndex;
+  private AbstractSearchIndex adminUISearchIndex;
   private SecurityService securityService;
   private MergeMediapackagesService mergeMediapackagesService;
   private WorkflowInstance workflowInstance;
@@ -151,7 +152,7 @@ public class Cronjob {
 
   public void updatedConfiguration(Dictionary properties) throws ConfigurationException {
     if (properties == null) {
-     logger.info("No configuration found");
+      logger.info("No configuration found");
       return;
     }
     logger.debug("Start updating Cronjob");
@@ -242,7 +243,8 @@ public class Cronjob {
           logger.error("Merge Wokflow could not be started.");
         }
       } else {
-        logger.info("Only One mediapackage found for merging skipping: id: {} , releation: {}", mpIdsList.toString(), entry.getKey());
+        logger.info("Only One mediapackage found for merging skipping: id: {} , releation: {}",
+            mpIdsList.toString(), entry.getKey());
       }
     }
   }
