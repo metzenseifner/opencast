@@ -1,0 +1,66 @@
+---
+# yamllint disable rule:line-length
+stages:
+  - precheck
+  - build
+  - package
+  - push
+
+syntax:
+  stage: precheck
+  tags:
+    - avportalbuilder
+  script:
+    - 'yamllint "$CI_PROJECT_DIR"/.gitlab-ci.yml'
+
+before_script:
+  - 'alternatives --set java /usr/lib/jvm/java-11-openjdk-11.0.15.0.10-3.el8.x86_64/bin/java'
+  - 'export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-11.0.15.0.10-3.el8.x86_64/'
+
+build:
+  stage: build
+  variables:
+    GIT_SUBMODULE_STRATEGY: recursive
+  tags: ['avportalbuilder']
+  script:
+    - 'id'
+    - 'mvn --version'
+    - >
+      mvn clean install
+      --projects modules/merge-candidate-finder-api,modules/merge-candidate-finder-impl,modules/mergemediapackages-impl,modules/mergemediapackages-api,modules/setaclandseries-woh,modules/uibk-ingest-service-impl   # yamllint disable-line rule:line-length
+      --also-make
+      -Dmaven.repo.local=/var/lib/builder/cache/.m2/repository
+      -e
+    - 'mkdir -p "$PERSISTENT_DIR/$CI_JOB_NAME"'
+    - >
+        rsync -av
+        modules/merge-candidate-finder-impl/target/*.jar
+        modules/merge-candidate-finder-api/target/*.jar
+        modules/mergemediapackages-impl/target/*.jar
+        modules/mergemediapackages-api/target/*.jar
+        modules/setaclandseries-woh/target/*.jar
+        modules/uibk-ingest-service-impl/target/*.jar
+        "$PERSISTENT_DIR/job_$CI_JOB_NAME"
+
+compress:
+  stage: package
+  tags: ['avportalbuilder']
+  script:
+    - "TIMESTAMP=$(date +'%Y-%m-%dT%H%M%S')"
+    - '[ ! -d "$PERSISTENT_DIR/job_$CI_JOB_NAME" ] && mkdir "$PERSISTENT_DIR/job_$CI_JOB_NAME"'
+    - cd "$PERSISTENT_DIR/job_build"
+    - >
+      tar -I zstd -cv *
+      -f "$PERSISTENT_DIR/job_$CI_JOB_NAME/${TIMESTAMP}_oc_uibk_modules.commit.$CI_COMMIT_SHORT_SHA.tar.zst"
+
+netshare:
+  stage: push
+  tags: ['avportalbuilder']
+  script:
+    - "TIMESTAMP=$(date +'%Y-%m-%dT%H%M%S')"
+    - >
+      mkdir -p "$NETSHARE_DIR/${TIMESTAMP}_commit_$CI_COMMIT_SHORT_SHA"
+    - >
+      rsync -av --progress "$PERSISTENT_DIR/job_compress/" "$NETSHARE_DIR/${TIMESTAMP}_commit_$CI_COMMIT_SHORT_SHA"
+    - >
+      rsync -av --progress "$PERSISTENT_DIR/job_build/" "$NETSHARE_DIR/${TIMESTAMP}_commit_$CI_COMMIT_SHORT_SHA"

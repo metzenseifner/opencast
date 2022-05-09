@@ -1,0 +1,27 @@
+[submodule "modules/merge-candidate-finder-impl"]
+	path = modules/merge-candidate-finder-impl
+	url = git@git.uibk.ac.at:zid/dmlt/avportal/software/opencast_modules/merge-candidate-finder-impl.git
+	branch = master/uibk/10.x
+[submodule "modules/merge-candidate-finder-api"]
+	path = modules/merge-candidate-finder-api
+	url = git@git.uibk.ac.at:zid/dmlt/avportal/software/opencast_modules/merge-candidate-finder-api.git
+	branch = master/uibk/10.x
+[submodule "modules/setaclandseries-woh"]
+	path = modules/setaclandseries-woh
+	url = git@git.uibk.ac.at:zid/dmlt/avportal/software/opencast_modules/setaclandseries-woh.git
+	branch = master/uibk/10.x
+[submodule "modules/mergemediapackages-api"]
+	path = modules/mergemediapackages-api
+	url = git@git.uibk.ac.at:zid/dmlt/avportal/software/opencast_modules/mergemediapackages-api.git
+	branch = master/uibk/10.x
+[submodule "modules/mergemediapackages-impl"]
+	path = modules/mergemediapackages-impl
+	url = git@git.uibk.ac.at:zid/dmlt/avportal/software/opencast_modules/mergemediapackages-impl.git
+	branch = master/uibk/10.x
+[submodule "modules/workflow-forwarded-impl"]
+	path = modules/workflow-forwarded-impl
+	url = git@git.uibk.ac.at:zid/dmlt/avportal/software/opencast_modules/workflow-forwarder-impl.git
+[submodule "modules/uibk-ingest-service-impl"]
+	path = modules/uibk-ingest-service-impl
+	url = git@git.uibk.ac.at:zid/dmlt/avportal/software/opencast_modules/uibk-ingest-service-impl.git
+        branch = master/uibk/10.x
