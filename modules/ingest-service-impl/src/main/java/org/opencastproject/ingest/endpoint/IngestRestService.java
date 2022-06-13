@@ -51,6 +51,7 @@ import org.opencastproject.scheduler.api.SchedulerException;
 import org.opencastproject.security.api.AccessControlList;
 import org.opencastproject.security.api.AccessControlParser;
 import org.opencastproject.security.api.AccessControlParsingException;
+import org.opencastproject.security.api.SecurityService;
 import org.opencastproject.security.api.TrustedHttpClient;
 import org.opencastproject.security.api.UnauthorizedException;
 import org.opencastproject.serviceregistry.api.ServiceRegistry;
@@ -103,6 +104,7 @@ import java.util.concurrent.TimeUnit;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -179,6 +181,9 @@ public class IngestRestService extends AbstractJobProducerEndpoint {
   private static final MediaPackageBuilderFactory MP_FACTORY = MediaPackageBuilderFactory.newInstance();
 
   private IngestService ingestService = null;
+
+  private SecurityService securityService = null;
+
   private ServiceRegistry serviceRegistry = null;
   private DublinCoreCatalogService dublinCoreService;
   // The number of ingests this service can handle concurrently.
@@ -1122,12 +1127,16 @@ public class IngestRestService extends AbstractJobProducerEndpoint {
       @RestResponse(description = "Returns the media package", responseCode = HttpServletResponse.SC_OK),
       @RestResponse(description = "Media package not valid", responseCode = HttpServletResponse.SC_BAD_REQUEST) },
     returnDescription = "")
-  public Response ingest(@Context HttpServletRequest request, @PathParam("wdID") String wdID) {
+  public Response ingest(@Context HttpServletRequest request, @PathParam("wdID") String wdID, @DefaultValue("false") @QueryParam("async") boolean async) {
     logger.trace("ingest media package with workflow definition id: {}", wdID);
     if (StringUtils.isBlank(wdID)) {
       return Response.status(Response.Status.BAD_REQUEST).build();
     }
-    return ingest(wdID, request);
+    if (async) {
+      return asynchronousIngest(wdID, request);
+    } else {
+      return ingest(wdID, request);
+    }
   }
 
   @POST
@@ -1156,6 +1165,11 @@ public class IngestRestService extends AbstractJobProducerEndpoint {
       }
     }
     return wfConfig;
+  }
+  private Response asynchronousIngest(final String wdID, final HttpServletRequest request) {
+    Thread childThread = new AsynchronousIngestThread(() -> this.ingest(wdID, request), securityService.getOrganization(), securityService.getUser());
+    childThread.start();
+    return Response.accepted().build();
   }
 
   private Response ingest(final String wdID, final HttpServletRequest request) {
@@ -1408,6 +1422,14 @@ public class IngestRestService extends AbstractJobProducerEndpoint {
   @Reference
   void setIngestService(IngestService ingestService) {
     this.ingestService = ingestService;
+  }
+
+  /**
+   * OSGi Declarative Services callback
+   * @param securityService
+   */
+  void setSecurityService(SecurityService securityService) {
+    this.securityService = securityService;
   }
 
   /**
