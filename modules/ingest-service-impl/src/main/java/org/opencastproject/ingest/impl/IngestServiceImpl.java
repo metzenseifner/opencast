@@ -1273,7 +1273,7 @@ public class IngestServiceImpl extends AbstractJobProducer implements IngestServ
    *          the workflow properties
    * @return the mediapackage
    */
-  private MediaPackage checkForLegacyMediaPackageId(MediaPackage mp, Map<String, String> properties)
+  private MediaPackage  checkForLegacyMediaPackageId(MediaPackage mp, Map<String, String> properties)
           throws IngestException {
     if (properties == null || properties.isEmpty())
       return mp;
