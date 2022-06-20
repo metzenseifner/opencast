@@ -18,9 +18,6 @@
 	path = modules/mergemediapackages-impl
 	url = git@git.uibk.ac.at:zid/dmlt/avportal/software/opencast_modules/mergemediapackages-impl.git
 	branch = master/uibk/10.x
-[submodule "modules/workflow-forwarded-impl"]
-	path = modules/workflow-forwarded-impl
-	url = git@git.uibk.ac.at:zid/dmlt/avportal/software/opencast_modules/workflow-forwarder-impl.git
 [submodule "modules/uibk-ingest-service-impl"]
 	path = modules/uibk-ingest-service-impl
 	url = git@git.uibk.ac.at:zid/dmlt/avportal/software/opencast_modules/uibk-ingest-service-impl.git
