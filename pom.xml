@@ -225,6 +225,7 @@
     <module>modules/sox-impl</module>
     <module>modules/sox-remote</module>
     <module>modules/sox-workflowoperation</module>
+    <module>modules/smp351-metadata-validator-woh</module>
     <module>modules/static</module>
     <module>modules/static-file-service-api</module>
     <module>modules/static-file-service-impl</module>
