@@ -1,0 +1,4 @@
+[submodule "modules/smp351-metadata-validator-woh"]
+	path = modules/smp351-metadata-validator-woh
+	url = git@github.com:metzenseifner/smp351-metadata-validator-woh.git
+	branch = 13.x

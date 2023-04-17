@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.opencastproject</groupId>
   <artifactId>base</artifactId>
-  <version>13-SNAPSHOT</version>
+  <version>13.x</version>
   <packaging>pom</packaging>
   <name>opencast</name>
   <description>Opencast is a media capture, processing, management and distribution system</description>
@@ -52,7 +52,7 @@
     <spring-security.version>3.1.7.RELEASE</spring-security.version>
   </properties>
   <modules>
-    <module>modules/admin-ui-frontend</module>
+    <!--<module>modules/admin-ui-frontend</module>-->
     <module>modules/admin-ui</module>
     <module>modules/adopter-registration-api</module>
     <module>modules/adopter-registration-impl</module>
@@ -216,6 +216,7 @@
     <module>modules/smil-api</module>
     <module>modules/smil-impl</module>
     <module>modules/smil-workflowoperation</module>
+    <module>modules/smp351-metadata-validator-woh</module>
     <module>modules/solr</module>
     <module>modules/sox-api</module>
     <module>modules/sox-impl</module>
