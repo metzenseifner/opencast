@@ -127,7 +127,7 @@ Opencast 13
 *Released on December 14th, 2022*
 
 - [[#4529](https://github.com/opencast/opencast/pull/4529)] -
-  Fix parent POM version of redirect module in r/13.x
+  Fix parent POM version of redirect module in r/13.4
 - [[#4519](https://github.com/opencast/opencast/pull/4519)] -
   Reduce number of snapshots taken in the new editor backend
 - [[#4513](https://github.com/opencast/opencast/pull/4513)] -

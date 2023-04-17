@@ -105,7 +105,7 @@ Example on how to create the Opencast 7 release branch:
           directory: "/modules/engage-paella-player-7"
           schedule:
           interval: daily
-          target-branch: "r/13.x"
+          target-branch: "r/13.4"
           open-pull-requests-limit: 10
 
   make a PR then merge this change to `develop` branch.
