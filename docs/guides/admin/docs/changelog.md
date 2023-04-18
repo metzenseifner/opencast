@@ -4,7 +4,7 @@ Changelog
 Opencast 13
 -----------
 
-### Opencast 13.4
+### Opencast 13.2
 
 *Released on March 21th, 2023*
 
@@ -127,7 +127,7 @@ Opencast 13
 *Released on December 14th, 2022*
 
 - [[#4529](https://github.com/opencast/opencast/pull/4529)] -
-  Fix parent POM version of redirect module in r/13.4
+  Fix parent POM version of redirect module in r/13.2
 - [[#4519](https://github.com/opencast/opencast/pull/4519)] -
   Reduce number of snapshots taken in the new editor backend
 - [[#4513](https://github.com/opencast/opencast/pull/4513)] -
@@ -285,7 +285,7 @@ Opencast 13
 - [[#4256](https://github.com/opencast/opencast/pull/4256)] -
   Bump chromedriver from 105.0.1 to 106.0.1 in /modules/admin-ui-frontend
 - [[#4246](https://github.com/opencast/opencast/pull/4246)] -
-  Bump underscore from 1.13.4 to 1.13.6 in /modules/engage-ui
+  Bump underscore from 1.13.2 to 1.13.6 in /modules/engage-ui
 - [[#4245](https://github.com/opencast/opencast/pull/4245)] -
   Bump eslint from 8.23.1 to 8.24.0 in /modules/runtime-info-ui
 - [[#4244](https://github.com/opencast/opencast/pull/4244)] -
@@ -599,7 +599,7 @@ Opencast 13
 - [[#3837](https://github.com/opencast/opencast/pull/3837)] -
   Bump eslint from 8.16.0 to 8.17.0 in /modules/engage-paella-player
 - [[#3834](https://github.com/opencast/opencast/pull/3834)] -
-  Bump underscore from 1.13.3 to 1.13.4 in /modules/engage-ui
+  Bump underscore from 1.13.3 to 1.13.2 in /modules/engage-ui
 - [[#3829](https://github.com/opencast/opencast/pull/3829)] -
   Bump checker-qual from 3.22.0 to 3.22.1 in /modules/db
 - [[#3827](https://github.com/opencast/opencast/pull/3827)] -

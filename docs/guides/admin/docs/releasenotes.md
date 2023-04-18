@@ -1,7 +1,7 @@
 # Opencast 13: Release Notes
 
 
-Opencast 13.4
+Opencast 13.2
 -------------
 
 The third maintenance release of Opencast 13.

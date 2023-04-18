@@ -1,7 +1,7 @@
-Upgrading Opencast from 12.x to 13.4
+Upgrading Opencast from 12.x to 13.2
 ====================================
 
-This guide describes how to upgrade Opencast 12.x to 13.4.
+This guide describes how to upgrade Opencast 12.x to 13.2.
 In case you need information about how to upgrade older versions of Opencast,
 please refer to [older release notes](https://docs.opencast.org).
 
